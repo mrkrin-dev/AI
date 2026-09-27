@@ -78,13 +78,31 @@ Pick a shirt, add a design, see it on the shirt, order it — CustomInk's flow: 
 - **No WhatsApp order automation** — same Meta Business API approval gate as any WhatsApp integration; order handoff to Shankar is in-app (admin order list) plus email, not WhatsApp, in v1.
 - **No live inventory/production-floor sync** — the admin panel tracks order status (in production/printed/shipped) as a manual flag Shankar sets; it does not connect to an actual production or inventory system.
 
-## 8. Open questions (need Shankar's answers before build starts)
+## 8. Decisions taken (no live client to interview — academy build, decided and documented, not left open)
 
-1. **Which vertical leads the first version** — The T-Shirt Shop (retail, single orders) or Sweet Ginger Basics (B2B bulk)? *Recommendation: lead with retail/single-order, since it's the simpler path through the same studio and proves the canvas + live preview + pricing core before adding the size/quantity breakdown UI for bulk — confirm or override.*
-2. What are the **bulk price breaks**, and is pricing per colour or per print method?
-3. What **artwork rules** do the printers need: file type, resolution, maximum print area — and does this differ by print method?
-4. **Which print method** is a given order for (DTF, embroidery, vinyl), and does that change what the design tool allows (e.g. embroidery can't reproduce a photographic gradient the way DTF can)?
-5. Should this **sit inside the existing store**, or stand alone and pass finished orders to it?
+The brief posed five open questions. Answered here as a domain call, with reasoning, so the build has no blocking unknowns. Each is a stated assumption, reversible if a real business review contradicts it — not a guess left unlabeled.
+
+**1. Which vertical leads the first version?**
+**Decision: The T-Shirt Shop (retail, single orders) leads.** Reasoning: both verticals share one studio (§6), so this only decides build order, not architecture. Retail/single-order is the simpler path through the same picker → canvas → preview → checkout — it proves the core mechanics (does the design survive a colour change, does the preview match, does the price update) before that same core is stressed with a size/quantity grid. CustomInk's own reference flow is fundamentally B2C-shaped; building toward that first, then extending the order step into a per-size quantity grid for Sweet Ginger Basics, is lower risk than the reverse.
+
+**2. Bulk price breaks — per colour or per print method?**
+**Decision: pricing varies by print method, not by garment colour.** Reasoning: blank garment cost is roughly colour-independent for a given style/size in standard cotton blanks; what actually drives cost is the print method (DTF > embroidery > vinyl, in typical per-unit cost for a given area) and quantity. Bulk tiers, applied on top of the print-method base price:
+- 1–9 units: standard unit price
+- 10–49: ~10% off
+- 50–199: ~20% off
+- 200+: custom tier — flagged for manual review before checkout completes, since true bulk (200+) production slotting is a real operational constraint even with an instant-checkout tool.
+
+**3. Artwork rules the printers need — file type, resolution, max print area?**
+**Decision:** accept PNG or JPG on upload (per brief); enforce a minimum effective resolution of 300 DPI at the design's placed print size (flag and warn, don't silently accept, if a customer's upload would print blurry); PNG preferred for logos with transparency. Maximum print area is defined **per garment, per side**, using standard industry dimensions as the starting point (adult tee: ~12"×16" front, ~10"×12" back) — pending confirmation against Shankar's actual press/frame sizes if this were a live engagement.
+
+**4. Does print method change what the design tool allows?**
+**Decision: yes**, and the canvas enforces this per selected print method:
+- **DTF** — full-colour, photographic gradients allowed; largest print area of the three.
+- **Vinyl** — solid/spot colours only (cap at a small fixed palette, no photographic gradients); print area capped smaller than DTF.
+- **Embroidery** — solid colour blocks only, smallest print area, and a minimum text height enforced (below ~0.25" a stitched letterform stops being legible) — the tool blocks placement rather than allowing an unproducible design through.
+
+**5. Stand-alone, or inside the existing store?**
+**Decision: stand-alone for this build.** Reasoning: this is the de-risking call consistent with the rest of the plan — a stand-alone studio is fully demonstrable and deployable on its own, doesn't depend on credentials or integration access to Shankar's existing store platform, and can hand off a finished order to an existing store via a simple webhook/API later if that integration is ever pursued. Building the integration first would make the whole submission depend on infrastructure this project doesn't control.
 
 ## 9. Reference material
 

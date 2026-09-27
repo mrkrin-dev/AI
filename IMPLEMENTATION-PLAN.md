@@ -3,11 +3,10 @@
 Build order is sequenced so every stage is demonstrable on its own. Both B2C and B2B run through the same studio throughout — there is no separate "B2B track" to build later; bulk is the quantity/size-breakdown step applied to the same picker, canvas, and preview.
 
 ## Stage 0 — Catalog, print areas, and data model (prerequisite)
-- Load real product catalog into Postgres: T-shirts (crew, oversized, polo) first; hoodies and caps deferred unless time allows, per the brief.
-- Each product: colours, sizes, unit price, bulk price tiers.
-- Define print-area coordinates per garment, **per side (front/back)**, and confirm against Shankar's actual printers whether print method (DTF/embroidery/vinyl) changes the allowed area or colour/gradient limits (PRD §8.3–4) — this decides whether print-area data needs a print-method dimension from day one.
-- **Demonstrable output:** a catalog Shankar can confirm as real, with front/back print-area bounds marked on real garment photos.
-- **Blocked on:** PRD §8 open questions — especially which vertical leads (retail vs bulk), and the print-method-to-print-area mapping.
+- Load product catalog into Postgres: T-shirts (crew, oversized, polo) first, retail/single-order use case leading per PRD §8.1; hoodies and caps deferred unless time allows.
+- Each product: colours, sizes, unit price, bulk tiers (per PRD §8.2: 1–9 / 10–49 / 50–199 / 200+ flagged for review).
+- Print-area coordinates per garment, **per side (front/back), per print method** (DTF/embroidery/vinyl each get their own max area and colour/gradient rule, per PRD §8.3–4) — built as a print-method dimension from day one, not retrofitted later.
+- **Demonstrable output:** a catalog with front/back print-area bounds marked per print method, on real or representative garment photos.
 
 ## Stage 1 — Product picker
 - Browse T-shirts (crew, oversized, polo) with colours and sizes.
@@ -56,7 +55,7 @@ Build order is sequenced so every stage is demonstrable on its own. Both B2C and
 
 ## The decision most expensive to reverse
 
-**Print-area coordinates per garment, per side, per print method (Stage 0).** Every later stage depends on these being right — the canvas bounds, the live preview's honesty, and the printable file all trace back to this. If print method changes the allowed area (open question §8.4) and that's discovered after the canvas is built assuming one universal print area, the canvas logic has to be reworked, not just the data. Resolve PRD §8.3–4 with Shankar before Stage 0 is considered done.
+**Print-area coordinates per garment, per side, per print method (Stage 0).** Every later stage depends on these being right — the canvas bounds, the live preview's honesty, and the printable file all trace back to this. PRD §8.3–4 already decides that print method changes the allowed area and colour rules, so Stage 0 builds that dimension in from the start rather than risking a rework after the canvas assumes one universal print area.
 
 ## Verification checklist before calling any stage done
 
