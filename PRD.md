@@ -2,87 +2,93 @@
 
 ## 1. Business context
 
-Shankar runs a T-shirt business selling both B2B (bulk, brands/teams/events) and B2C (single custom shirt), and manufactures the shirts himself. Reference sites: his B2C store ("The T-Shirt Shop") and his B2B site (Sweet Ginger — sweetginger.in, custom printed team/brand shirts).
+Shankar Hemrajani is founder and CEO of **Sweet Ginger Fashions**, a Jaipur apparel company grown from a single 150 sq ft T-shirt outlet over 17+ years. It runs three verticals:
 
-Today, every custom order — text, logo, placement, colour, size, quantity — is negotiated over WhatsApp and email, one message at a time. Nothing is captured in a structured way until Shankar personally converts a conversation into a print job.
+- **Sweet Ginger Basics** — B2B/wholesale blanks: plain T-shirts, polos, hoodies, sweatshirts for resellers, corporate gifting, events, printers.
+- **The T-Shirt Shop** — retail/D2C: physical stores plus an online store.
+- **Ginger Prints** — printing and customization: DTF, embroidery, vinyl, for tees and caps.
+
+Today, every custom order is negotiated over WhatsApp and email, one message at a time. Shankar wants a **customizable T-shirt design system a customer can use on their own**, for both a single B2C order and a B2B bulk order.
 
 ## 2. The problem, stated precisely
 
-The bottleneck is not "no website." It is the **design convergence loop**: a customer describes an idea in words, Shankar (or someone) mocks it up, sends a photo, the customer asks for changes, repeat — often across several days, across two channels (WhatsApp + email), with no record of which version was approved.
+The bottleneck is the **design convergence loop**, not "no website": a customer describes an idea in words, someone mocks it up, sends a photo, the customer asks for changes, repeat — across two channels, with no record of what was actually approved, and no structured order until a human converts a conversation into a print job.
 
-This has three costs:
-- Shankar's time is spent on back-and-forth instead of production.
-- Ambiguity at handoff: what reaches the print stage is a photo of a mockup, not a precise, positioned spec.
-- No structured order record — no history, no reordering, no bulk-quantity breakdown by size.
+This costs: production time spent on back-and-forth; ambiguity at handoff (a photo of a mockup, not a precise spec); no reusable order record, no size/quantity breakdown for bulk.
 
 ## 3. Users
 
-- **B2C customer** — wants one shirt, self-serve, pays immediately, wants to see exactly what they're getting before paying.
-- **B2B buyer** — orders on behalf of a team/brand/event, needs quantity broken down by size, likely negotiates price or needs approval before paying, may need an invoice rather than instant card payment.
-- **Shankar (producer/admin)** — needs, per order: garment (style/colour/size), the exact design (text/logo, position, size, rotation) in a producible form, and the total to print — not a photo, not a WhatsApp thread.
+- **B2C customer (The T-Shirt Shop)** — one shirt, self-serve, pays immediately.
+- **B2B buyer (Sweet Ginger Basics)** — orders for resale/events/corporate gifting, needs a quantity broken down per size against one design, bulk pricing.
+- **Shankar / production (Ginger Prints)** — needs, per order: garment, exact design placement, and a file usable for the actual print method (DTF, embroidery, or vinyl) — not a photo, not a thread.
+
+**Both single and bulk orders go through the same studio.** This is not two separate flows with a shared canvas bolted on — one product picker, one design canvas, one live preview, with quantity/size breakdown as the variable that differs between a B2C and a B2B order.
 
 ## 4. Product shape (reference: CustomInk Design Lab)
 
-Take the shape from CustomInk, not the shape from Drop Studio. CustomInk's flow is a manual editor: choose a product → add text or upload artwork → move, resize, rotate it on the shirt → pick colour and size → price updates live → check out. Drop Studio is AI-prompt-to-design and AI-generated mockup photography — a different product entirely, and out of scope (see §7).
-
-The customer converges on the design themselves. What reaches Shankar is already resolved: a garment spec, a design spec, and an order — not another ambiguous request.
+Pick a shirt, add a design, see it on the shirt, order it — CustomInk's flow: product → text/art → placement → colour → price → cart. Drop Studio (AI design generation, background removal, realistic mockups) is a different shape entirely and is **optional, only if there's time** — not the core of this build (see §7).
 
 ## 5. Functional requirements
 
-### 5.1 Product & catalog
-- Fixed catalog: garment styles Shankar actually stocks (need his real list — round-neck, polo, hoodie, etc.).
-- Each style has: available colours, available sizes, base price.
-- Catalog data lives in Airtable, editable by Shankar without a code change.
+### 5.1 Product picker
+- Browse blanks: **T-shirts first** (crew, oversized, polo), then hoodies and caps if time allows.
+- Each product has its own colours and sizes.
+- Show a **price per product**, and a **bulk price for B2B quantities**, both visible at the picker stage — not only revealed at checkout.
 
 ### 5.2 Design canvas
-- Add text: free text, font choice (limited set), text colour, font size.
-- Upload artwork/logo: common image formats (PNG, JPG, SVG); customer moves, resizes, rotates it on the garment.
-- Multiple elements per design (e.g. front text + logo) — stretch goal if time allows, not blocking v1.
-- Live preview: design renders on the selected garment colour in real time as changes are made.
-- Print-area constraint: element placement is bounded to a printable area per garment (not the whole image canvas) — this must be visually indicated, not just enforced silently.
-- A rights checkbox at upload: "I own the rights to use this artwork" — standard liability hygiene, not a legal fix.
+- Pick a product and colour, then design on it: add **text** and upload **artwork** (PNG or JPG).
+- Move, scale, rotate each element.
+- Support **front and back** of the shirt as two design surfaces on the same order.
+- A **print area the design cannot leave** — enforced, and visually indicated, not just clipped silently.
+- Text controls: font choice, text colour, size.
 
-### 5.3 Colour & size selection
-- Colour swatches update the garment preview under the design (design does not move; garment colour changes).
-- Size selector (S–XXL or Shankar's real range) drives price where sizes are priced differently (e.g. XXL+ upcharge), and drives the B2B quantity grid.
+### 5.3 Live preview
+- The design sits on the **actual selected shirt colour**, not a generic mockup — and updates as the customer edits. It must read as close to printed, not pasted flat on top (shading/blend appropriate to fabric colour, not just a flat image layer).
+- Switching colour or size **must not lose the design** — this is a hard invariant, not a nice-to-have (see §6).
 
-### 5.4 Pricing
-- Live price recalculates on every change: garment style, colour (if colour affects price), size, number of print locations, quantity (B2B).
-- Pricing rules live in Airtable/config, not hardcoded — Shankar can change prices without a rebuild.
+### 5.4 Order
+- Quantity, size breakdown, and price, all updated live.
+- B2B: buyer sets a **quantity per size** against the one design. B2C: quantity is usually one.
+- Cart and simple checkout.
+- The design is **saved with the order** so it can be printed — an order without artwork is not a valid, printable order.
 
-### 5.5 B2C checkout
-- Single shirt, single design, pay now via Razorpay.
-- Order confirmation shows the final design + garment + total.
+### 5.5 Admin side (Shankar's side — required for v1, not a stretch goal)
+- A list of orders, each with its design attached.
+- Download the artwork, or a **print-ready file** matching the order's print method (DTF, embroidery, or vinyl).
+- Mark an order's status: in production → printed → shipped.
 
-### 5.6 B2B bulk order
-- Same design canvas, but order intake is a size/quantity grid (e.g. S:10, M:25, L:15, XL:5) against one design.
-- Needs a decision from Shankar (see open questions): instant checkout at bulk price, or submit-for-quote (he confirms price/turnaround before payment is collected). Default assumption for v1: **submit-for-quote**, because bulk pricing and production slotting are usually negotiated, not fixed — Shankar should override this in the first review if wrong.
+### 5.6 Optional, only if there is time
+- Generate a design from a text prompt; remove the background from an uploaded image (the Drop Studio shape — fits the printing business, but is not core).
+- Save a design so a returning customer can reuse it.
 
-### 5.7 Order handoff to Shankar
-- Every completed order (B2C paid, or B2B submitted) produces:
-  - A structured record (garment, colour, size(s)+qty, price, customer contact) in Airtable.
-  - A print-ready export of the design: a flattened image of the design in position, plus the raw parameters (element type, x/y, width/height, rotation, colour) as data — so it is both human-checkable and machine-usable later.
-- A notification reaches Shankar (email at minimum; WhatsApp is phase 2, gated on Meta Business API approval — same constraint that applies to any WhatsApp automation).
+**Per the decision already made for this MVP: none of §5.6 ships in v1.** It is not deferred as "phase 2 by default" either — it's built only if explicitly requested later, exactly like the prior de-risking call to keep the ordering flow's entire critical path free of any external model dependency. See §7.
 
-## 6. Success criteria for the MVP
+## 6. Rules that must hold (invariants, not preferences)
 
-- A customer can go from "pick a shirt" to "paid order placed" with zero messages exchanged with Shankar, for a single-item order.
-- A B2B buyer can submit a bulk order with a full size/quantity breakdown and one design, without a phone call.
-- Every order Shankar receives contains everything needed to print, with no photo-of-a-mockup step.
+- The design is never lost when colour, size, or quantity changes.
+- The preview matches the chosen shirt colour and the chosen placement.
+- The price updates from the product and the quantity, with a bulk tier for B2B.
+- An order always carries its design; an order without artwork is not printable.
+- Both single and bulk orders go through the same studio.
 
 ## 7. Explicit non-goals (v1)
 
-- **No AI-generated designs or AI mockup photography** (the Drop Studio shape). Not deferred to phase 2 by default — only added later if explicitly requested.
-- **No AI background removal / logo cleanup** on upload. Phase 2 candidate only if real customer uploads turn out to need it.
-- **No WhatsApp order automation** — gated on Meta Business API approval (7-day process), same as prior builds. Web + email only in v1.
-- **No voice ordering.**
-- **No live production/inventory sync** — Shankar still manages physical stock and print scheduling himself; this system produces the order + design spec, it does not run his print floor.
-- **Model dependency is zero for the entire ordering flow.** Every feature in §5 is deterministic logic (canvas math, pricing rules, catalog lookups). This is a deliberate de-risking decision: if any external service is down, the core flow still works.
+- **No AI-generated designs, no AI background removal, no AI mockup photography** (the Drop Studio shape from §5.6). Zero model dependency anywhere in the ordering flow — product picker, canvas, live preview, pricing, cart, checkout, and admin are all deterministic logic. If any external service is down, the entire studio still works end to end.
+- **No saved-design-for-reuse** in v1 (§5.6) — requires either an account system or a device-local store; add only once the core flow is proven.
+- **No WhatsApp order automation** — same Meta Business API approval gate as any WhatsApp integration; order handoff to Shankar is in-app (admin order list) plus email, not WhatsApp, in v1.
+- **No live inventory/production-floor sync** — the admin panel tracks order status (in production/printed/shipped) as a manual flag Shankar sets; it does not connect to an actual production or inventory system.
 
 ## 8. Open questions (need Shankar's answers before build starts)
 
-1. Real product catalog: which garment styles, colours, sizes does he actually stock/produce?
-2. Print method (screen print vs DTG vs vinyl) — this determines whether colour choice is free-form or constrained, and whether the print area is one fixed zone or flexible.
-3. B2B flow: instant bulk checkout, or submit-for-quote-then-pay? (v1 assumes submit-for-quote — confirm or override.)
-4. What does he need per order to actually print — is a flattened image + position data enough, or does his production process need a specific file format?
-5. Payment for B2B: full payment upfront, deposit, or invoice/pay-on-delivery?
+1. **Which vertical leads the first version** — The T-Shirt Shop (retail, single orders) or Sweet Ginger Basics (B2B bulk)? *Recommendation: lead with retail/single-order, since it's the simpler path through the same studio and proves the canvas + live preview + pricing core before adding the size/quantity breakdown UI for bulk — confirm or override.*
+2. What are the **bulk price breaks**, and is pricing per colour or per print method?
+3. What **artwork rules** do the printers need: file type, resolution, maximum print area — and does this differ by print method?
+4. **Which print method** is a given order for (DTF, embroidery, vinyl), and does that change what the design tool allows (e.g. embroidery can't reproduce a photographic gradient the way DTF can)?
+5. Should this **sit inside the existing store**, or stand alone and pass finished orders to it?
+
+## 9. Reference material
+
+- **CustomInk Design Lab** — the flow to copy: product, text and art, placement, colour, price, cart.
+- **Drop Studio** — AI design generation, background removal, realistic mockups (optional, §5.6 only).
+- **The T-Shirt Shop** — his retail store and its existing Customize entry point.
+- **Sweet Ginger Basics** — his B2B/wholesale site.
